@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caldera Airdrop Checker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #e85d2c, #d14a1f);
+            min-height: 100vh;
+            padding: 20px;
+            color: white;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .input-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .address-textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1rem;
+            font-family: 'Courier New', monospace;
+            resize: vertical;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+        }
+
+        .address-textarea::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .address-textarea:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .check-btn {
+            background: linear-gradient(135deg, #fff, #f0f0f0);
+            color: #d14a1f;
+            width: 100%;
+            font-size: 1.1rem;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .check-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .total-summary {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            text-align: center;
+            display: none;
+        }
+
+        .total-summary.show {
+            display: block;
+        }
+
+        .total-summary h2 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .total-summary .amount {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .check-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .addresses-list {
+            margin-top: 15px;
+        }
+
+        .addresses-list {
+            margin-top: 15px;
+        }
+
+        .address-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        .remove-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .remove-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .results {
+            display: grid;
+            gap: 20px;
+        }
+
+        .result-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .address-display {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            opacity: 0.9;
+            word-break: break-all;
+        }
+
+        .total-allocation {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .eligibility-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            margin-bottom: 12px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .eligibility-label {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .eligibility-amount {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .no-eligibility {
+            text-align: center;
+            opacity: 0.8;
+            font-style: italic;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.1rem;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: rgba(255, 0, 0, 0.2);
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            color: #ffcccc;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .result-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔥 Caldera Airdrop Checker</h1>
+            <p>Check your $SERA token allocation across multiple addresses</p>
+        </div>
+
+        <div class="input-section">
+            <textarea 
+                class="address-textarea" 
+                placeholder="Enter multiple Ethereum addresses (one per line)
+Example:
+0xC73535d30934eb9097aD197Fbc4FE18D8701BfBA
+0x61fecc89c4afd006293a3c50860f47b66fdb3718
+0x..." 
+                id="addressTextarea"></textarea>
+            
+            <button class="check-btn" onclick="checkEligibility()" id="checkBtn">
+                Check Eligibility
+            </button>
+        </div>
+
+        <div class="total-summary" id="totalSummary">
+            <h2>🎉 Total $SERA Allocation</h2>
+            <div class="amount" id="totalAmount">0 $SERA</div>
+            <div class="addresses-count" id="addressesCount">Across 0 addresses</div>
+        </div>
+
+        <div class="results" id="results"></div>
+    </div>
+
+    <script>
+        let addresses = [];
+
+        function parseAddresses() {
+            const textarea = document.getElementById('addressTextarea');
+            const text = textarea.value.trim();
+            
+            if (!text) {
+                return [];
+            }
+            
+            // Split by newlines, commas, or spaces and filter valid addresses
+            const rawAddresses = text.split(/[\n,\s]+/).filter(addr => addr.trim() !== '');
+            const validAddresses = [];
+            const invalidAddresses = [];
+            
+            for (const addr of rawAddresses) {
+                const cleanAddr = addr.trim();
+                if (cleanAddr.match(/^0x[a-fA-F0-9]{40}$/)) {
+                    const lowerAddr = cleanAddr.toLowerCase();
+                    if (!validAddresses.includes(lowerAddr)) {
+                        validAddresses.push(lowerAddr);
+                    }
+                } else if (cleanAddr.length > 0) {
+                    invalidAddresses.push(cleanAddr);
+                }
+            }
+            
+            if (invalidAddresses.length > 0) {
+                alert(`Invalid addresses found and will be ignored:\n${invalidAddresses.join('\n')}`);
+            }
+            
+            return validAddresses;
+        }
+
+        async function checkEligibility() {
+            const addresses = parseAddresses();
+            
+            if (addresses.length === 0) {
+                alert('Please enter at least one valid Ethereum address');
+                return;
+            }
+            
+            const resultsDiv = document.getElementById('results');
+            const checkBtn = document.getElementById('checkBtn');
+            
+            checkBtn.disabled = true;
+            checkBtn.textContent = `Checking ${addresses.length} address${addresses.length > 1 ? 'es' : ''}...`;
+            resultsDiv.innerHTML = `<div class="loading">Checking eligibility for ${addresses.length} address${addresses.length > 1 ? 'es' : ''}...</div>`;
+            
+            try {
+                const results = await Promise.all(
+                    addresses.map(address => checkSingleAddress(address))
+                );
+                
+                displayResults(results);
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">Error checking eligibility: ${error.message}</div>`;
+            } finally {
+                checkBtn.disabled = false;
+                checkBtn.textContent = 'Check Eligibility';
+            }
+        }
+
+        async function checkSingleAddress(address) {
+            const url = `https://claim.caldera.foundation/api/trpc/eligibility.getEthAddressEligibility?batch=1&input=%7B%220%22%3A%7B%22json%22%3A%7B%22address%22%3A%22${address}%22%7D%7D%7D`;
+            
+            try {
+                // Try direct fetch first
+                let response;
+                try {
+                    response = await fetch(url, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                        },
+                        mode: 'cors'
+                    });
+                } catch (corsError) {
+                    // If CORS fails, try with a proxy
+                    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+                    const proxyResponse = await fetch(proxyUrl);
+                    const proxyData = await proxyResponse.json();
+                    
+                    if (proxyData.contents) {
+                        const data = JSON.parse(proxyData.contents);
+                        return processApiResponse(data, address);
+                    } else {
+                        throw new Error('Proxy request failed');
+                    }
+                }
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                return processApiResponse(data, address);
+                
+            } catch (error) {
+                console.error('Error fetching data for address:', address, error);
+                return {
+                    address: address,
+                    eligibilityData: {},
+                    success: false,
+                    error: `Failed to fetch data: ${error.message}`
+                };
+            }
+        }
+
+        function processApiResponse(data, address) {
+            if (data && data[0] && data[0].result && data[0].result.data && data[0].result.data.json) {
+                return {
+                    address: address,
+                    eligibilityData: data[0].result.data.json.eligibilityData || {},
+                    success: true
+                };
+            } else {
+                return {
+                    address: address,
+                    eligibilityData: {},
+                    success: false,
+                    error: 'No eligibility data found'
+                };
+            }
+        }
+
+        function displayResults(results) {
+            const resultsDiv = document.getElementById('results');
+            const totalSummary = document.getElementById('totalSummary');
+            const totalAmountEl = document.getElementById('totalAmount');
+            const addressesCountEl = document.getElementById('addressesCount');
+            
+            if (results.length === 0) {
+                resultsDiv.innerHTML = '<div class="no-eligibility">No addresses to check</div>';
+                totalSummary.classList.remove('show');
+                return;
+            }
+            
+            // Calculate total allocation across all addresses
+            let grandTotal = 0;
+            let successfulAddresses = 0;
+            
+            results.forEach(result => {
+                if (result.success) {
+                    const eligibilityData = result.eligibilityData;
+                    const addressTotal = Object.keys(eligibilityData).reduce((sum, key) => sum + eligibilityData[key], 0);
+                    grandTotal += addressTotal;
+                    if (addressTotal > 0) successfulAddresses++;
+                }
+            });
+            
+            // Update total summary
+            totalAmountEl.textContent = `${grandTotal.toLocaleString()} $SERA`;
+            addressesCountEl.textContent = `Across ${results.length} address${results.length > 1 ? 'es' : ''} (${successfulAddresses} eligible)`;
+            totalSummary.classList.add('show');
+            
+            resultsDiv.innerHTML = results.map(result => {
+                if (!result.success) {
+                    return `
+                        <div class="result-card">
+                            <div class="result-header">
+                                <div class="address-display">${result.address}</div>
+                            </div>
+                            <div class="error">Error: ${result.error}</div>
+                        </div>
+                    `;
+                }
+                
+                const eligibilityData = result.eligibilityData;
+                const eligibilityKeys = Object.keys(eligibilityData);
+                
+                if (eligibilityKeys.length === 0) {
+                    return `
+                        <div class="result-card">
+                            <div class="result-header">
+                                <div class="address-display">${result.address}</div>
+                                <div class="total-allocation">0 $SERA</div>
+                            </div>
+                            <div class="no-eligibility">This address is not eligible for $SERA allocation</div>
+                        </div>
+                    `;
+                }
+                
+                const totalAllocation = eligibilityKeys.reduce((sum, key) => sum + eligibilityData[key], 0);
+                
+                return `
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="address-display">${result.address}</div>
+                            <div class="total-allocation">${totalAllocation.toLocaleString()} $SERA</div>
+                        </div>
+                        ${eligibilityKeys.map(key => `
+                            <div class="eligibility-item">
+                                <div class="eligibility-label">${formatEligibilityType(key)}</div>
+                                <div class="eligibility-amount">${eligibilityData[key].toLocaleString()} $SERA</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function formatEligibilityType(type) {
+            return type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+
+
+        // Sample addresses for testing
+        document.getElementById('addressTextarea').value = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045\n0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B';
+    </script>
+</body>
+</html>
