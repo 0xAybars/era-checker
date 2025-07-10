@@ -347,15 +347,32 @@ Example:
             
             const resultsDiv = document.getElementById('results');
             const checkBtn = document.getElementById('checkBtn');
+            const totalSummary = document.getElementById('totalSummary');
+            
+            // Hide total summary during checking
+            totalSummary.classList.remove('show');
             
             checkBtn.disabled = true;
             checkBtn.textContent = `Checking ${addresses.length} address${addresses.length > 1 ? 'es' : ''}...`;
-            resultsDiv.innerHTML = `<div class="loading">Checking eligibility for ${addresses.length} address${addresses.length > 1 ? 'es' : ''}...</div>`;
+            resultsDiv.innerHTML = `<div class="loading">Checking eligibility for ${addresses.length} address${addresses.length > 1 ? 'es' : ''}...<br><small>Will retry automatically if API fails</small></div>`;
             
             try {
-                const results = await Promise.all(
-                    addresses.map(address => checkSingleAddress(address))
-                );
+                const results = [];
+                
+                // Process addresses one by one to show progress and handle retries better
+                for (let i = 0; i < addresses.length; i++) {
+                    const address = addresses[i];
+                    const shortAddress = `${address.slice(0, 6)}...${address.slice(-4)}`;
+                    
+                    // Update progress
+                    checkBtn.textContent = `Checking ${shortAddress} (${i + 1}/${addresses.length})...`;
+                    
+                    const result = await checkSingleAddress(address);
+                    results.push(result);
+                    
+                    // Update loading message with progress
+                    resultsDiv.innerHTML = `<div class="loading">Checked ${i + 1}/${addresses.length} addresses...<br><small>Processing remaining addresses...</small></div>`;
+                }
                 
                 displayResults(results);
             } catch (error) {
@@ -366,7 +383,10 @@ Example:
             }
         }
 
-        async function checkSingleAddress(address) {
+        async function checkSingleAddress(address, retryCount = 0) {
+            const maxRetries = 5;
+            const retryDelay = 1000; // 1 second base delay
+            
             const url = `https://claim.caldera.foundation/api/trpc/eligibility.getEthAddressEligibility?batch=1&input=%7B%220%22%3A%7B%22json%22%3A%7B%22address%22%3A%22${address}%22%7D%7D%7D`;
             
             try {
@@ -403,14 +423,35 @@ Example:
                 return processApiResponse(data, address);
                 
             } catch (error) {
-                console.error('Error fetching data for address:', address, error);
+                console.error(`Attempt ${retryCount + 1} failed for address ${address}:`, error);
+                
+                // If we haven't reached max retries, try again
+                if (retryCount < maxRetries) {
+                    const delay = retryDelay * Math.pow(2, retryCount); // Exponential backoff
+                    console.log(`Retrying in ${delay}ms... (${retryCount + 1}/${maxRetries})`);
+                    
+                    // Update UI to show retry status
+                    updateRetryStatus(address, retryCount + 1, maxRetries);
+                    
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    return checkSingleAddress(address, retryCount + 1);
+                }
+                
+                // All retries failed
+                console.error(`All retries failed for address: ${address}`);
                 return {
                     address: address,
                     eligibilityData: {},
                     success: false,
-                    error: `Failed to fetch data: ${error.message}`
+                    error: `Failed after ${maxRetries} attempts: ${error.message}`
                 };
             }
+        }
+
+        function updateRetryStatus(address, currentRetry, maxRetries) {
+            const checkBtn = document.getElementById('checkBtn');
+            const shortAddress = `${address.slice(0, 6)}...${address.slice(-4)}`;
+            checkBtn.textContent = `Retrying ${shortAddress} (${currentRetry}/${maxRetries})...`;
         }
 
         function processApiResponse(data, address) {
